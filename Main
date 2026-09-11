@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Transit Ticket</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --primary-blue: #0A84FF;
+      --transit-red: #D70015;
+      --bg-dark: #121214;
+      --card-bg: #FFFFFF;
+      --text-muted: #8E8E93;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-dark);
+      color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Screen Frame matching iOS Viewport */
+    .iphone-screen {
+      width: 100vw;
+      max-width: 430px;
+      height: 100vh;
+      background-color: #000;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      height: 48px;
+      padding: 12px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #FFF;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      z-index: 10;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* Header Nav */
+    .nav-bar {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .back-btn {
+      color: var(--primary-blue);
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 300;
+    }
+
+    .nav-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #FFF;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    /* Main Content Area */
+    .content-area {
+      flex: 1;
+      padding: 12px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Animated Flashing Color Bars (Transit Validator Security Feature) */
+    .flashing-bars {
+      display: flex;
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .bar {
+      flex: 1;
+      animation: pulseBar 1.2s infinite ease-in-out alternate;
+    }
+
+    .bar-1 { background-color: #34C759; animation-delay: 0.0s; }
+    .bar-2 { background-color: #007AFF; animation-delay: 0.2s; }
+    .bar-3 { background-color: #AF52DE; animation-delay: 0.4s; }
+    .bar-4 { background-color: #FF9500; animation-delay: 0.6s; }
+    .bar-5 { background-color: #FF2D55; animation-delay: 0.8s; }
+
+    @keyframes pulseBar {
+      0% { opacity: 0.25; }
+      100% { opacity: 1; }
+    }
+
+    /* Ticket Card */
+    .ticket-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* QR Code Container */
+    .qr-container {
+      background: #FFF;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #E5E5EA;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .qr-caption {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Interstate Info */
+    .ticket-info {
+      text-align: center;
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .route-name {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--transit-red);
+      text-transform: uppercase;
+    }
+
+    .zone-number {
+      font-size: 38px;
+      font-weight: 800;
+      color: #000;
+      line-height: 1.1;
+      margin-top: 4px;
+    }
+
+    .zone-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1C1C1E;
+      letter-spacing: 0.5px;
+    }
+
+    .passenger-type {
+      font-size: 13px;
+      color: #3A3A3C;
+      margin-top: 2px;
+    }
+
+    /* Countdown & Footer */
+    .ticket-footer {
+      margin-top: auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 8px;
+    }
+
+    .expiration-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #000;
+    }
+
+    .expiration-text span {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+    }
+
+    .instructions-link {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--transit-red);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* Bottom Home Indicator */
+    .home-indicator {
+      width: 134px;
+      height: 5px;
+      background: #FFF;
+      border-radius: 100px;
+      margin: 8px auto 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="iphone-screen">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span id="live-clock">11:47</span>
+    <div class="status-icons">
+      <svg width="17" height="11" viewBox="0 0 17 11" fill="none">
+        <path d="M1 8.5C1 8.5 2.5 10 5.5 10C8.5 10 11.5 8.5 11.5 8.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M3 5.5C3 5.5 4.5 7 6.5 7C8.5 7 10 5.5 10 5.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="6.5" cy="2.5" r="1.5" fill="white"/>
+      </svg>
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="white">
+        <path d="M1 9.5H3V1.5H1V9.5ZM5 9.5H7V3.5H5V9.5ZM9 9.5H11V5.5H9V9.5ZM13 9.5H15V7.5H13V9.5Z"/>
+      </svg>
+      <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
+        <rect x="0.75" y="0.75" width="20.5" height="10.5" rx="3.25" stroke="white" stroke-width="1.5"/>
+        <rect x="2" y="2" width="18" height="8" rx="2" fill="white"/>
+        <path d="M22.5 4.5V7.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Top Bar Navigation -->
+  <div class="nav-bar">
+    <div class="back-btn">&#x2039;</div>
+    <div class="nav-title">10 Trip Discount Ticket</div>
+  </div>
+
+  <!-- Content Section -->
+  <div class="content-area">
+    <!-- Flashing Security Bar -->
+    <div class="flashing-bars">
+      <div class="bar bar-1"></div>
+      <div class="bar bar-2"></div>
+      <div class="bar bar-3"></div>
+      <div class="bar bar-4"></div>
+      <div class="bar bar-5"></div>
+    </div>
+
+    <!-- Ticket View -->
+    <div class="ticket-card">
+      <div class="qr-container" id="qrcode"></div>
+      <div class="qr-caption">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+        </svg>
+        Tap to enlarge
+      </div>
+
+      <div class="ticket-info">
+        <div class="route-name">Interstate</div>
+        <div class="zone-number">2</div>
+        <div class="zone-label">ZONE RIDE</div>
+        <div class="passenger-type">1 Adult</div>
+      </div>
+
+      <div class="ticket-footer">
+        <div class="expiration-text">
+          Expires in <span id="timer-display">59:47</span>
+        </div>
+        <a href="#" class="instructions-link">View Onboard Validator instructions</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Home Indicator -->
+  <div class="home-indicator"></div>
+</div>
+
+<script>
+  // Clock Updater
+  function updateClock() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('live-clock').textContent = `${hours}:${minutes}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // QR Code Generation & Offline LocalStorage Sync
+  const STORAGE_KEY = 'transit_ticket_token';
+  let ticketToken = localStorage.getItem(STORAGE_KEY);
+
+  if (!ticketToken) {
+    // Generate a secure pseudo-random payload matching transit formats
+    ticketToken = 'TKT-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now();
+    localStorage.setItem(STORAGE_KEY, ticketToken);
+  }
+
+  new QRCode(document.getElementById('qrcode'), {
+    text: ticketToken,
+    width: 170,
+    height: 170,
+    colorDark: '#000000',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  // Expiration Timer with Persistent Timestamp
+  const TIMER_STORAGE_KEY = 'transit_timer_end';
+  let timerEnd = localStorage.getItem(TIMER_STORAGE_KEY);
+
+  if (!timerEnd || Number(timerEnd) <= Date.now()) {
+    // Reset timer to 60 minutes if expired or newly initialized
+    timerEnd = Date.now() + 60 * 60 * 1000;
+    localStorage.setItem(TIMER_STORAGE_KEY, timerEnd);
+  }
+
+  function updateTimer() {
+    const remainingMs = Math.max(0, Number(timerEnd) - Date.now());
+    const totalSeconds = Math.floor(remainingMs / 1000);
+    const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+    document.getElementById('timer-display').textContent = `${minutes}:${seconds}`;
+
+    if (remainingMs <= 0) {
+      // Refresh timer loop for prototype showcase
+      timerEnd = Date.now() + 60 * 60 * 1000;
+      localStorage.setItem(TIMER_STORAGE_KEY, timerEnd);
+    }
+  }
+
+  setInterval(updateTimer, 1000);
+  updateTimer();
+</script>
+
+</body>
+</html>
